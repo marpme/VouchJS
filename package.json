@@ -1,0 +1,17 @@
+{
+  "name": "nodes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nudes.js",
+  "scripts": {
+    "start": "node app/vouches.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.1.0",
+    "jsonfile": "^3.0.1",
+    "shell-quote": "^1.6.1"
+  }
+}
