@@ -1,89 +1,59 @@
-const moment = require('moment')
+import moment from 'moment'
 
-exports.vote = (msg, blocked, vouches, client) => {
+export default function(msg, blocked, vouches, client) {
 	let users = msg.mentions.users.array()
 
 	let description
 	let proof
 
 	// check if the user wants to vouch himself
-	if (
-		users.find(user => user.id === msg.author.id) !=
-		undefined
-	) {
-		msg.reply(
-			":no_entry: You can't vouch yourself, but nice try."
-		)
+	if (users.find(user => user.id === msg.author.id) != undefined) {
+		msg.reply(":no_entry: You can't vouch yourself, but nice try.")
 		return Promise.resolve(vouches)
 		// check if the voucher is blocker RIP
 	} else if (blocked[msg.author.id] != null) {
-		msg.reply(
-			":no_entry: You can't vouch anymore, you have been blocked."
-		)
+		msg.reply(":no_entry: You can't vouch anymore, you have been blocked.")
 		return Promise.resolve(vouches)
 	}
 
 	let uniqueMetion = [...new Set(users)]
 
 	return Promise.all(
-		createVouchRequestForUsers(
-			uniqueMetion,
-			msg,
-			vouches
-		)
+		createVouchRequestForUsers(uniqueMetion, msg, vouches)
 	).then(createdVouches => {
-		const newVouches = createdVouches.reduce(
-			(prev, vouch) => {
-				if (vouch == null) return vouches
+		const newVouches = createdVouches.reduce((prev, vouch) => {
+			if (vouch == null) return vouches
 
-				let {
-					user,
-					authorID,
-					stamp,
-					description,
-					proof
-				} = vouch
-				if (prev[user.id] === undefined) {
-					prev[user.id] = [
-						{
-							user: authorID,
-							time: moment().unix(),
-							description,
-							proof
-						}
-					]
-				} else {
-					prev[user.id].unshift({
+			let { user, authorID, stamp, description, proof } = vouch
+			if (prev[user.id] === undefined) {
+				prev[user.id] = [
+					{
 						user: authorID,
 						time: moment().unix(),
 						description,
-						proof
-					})
-				}
-				return prev
-			},
-			vouches
-		)
+						proof,
+					},
+				]
+			} else {
+				prev[user.id].unshift({
+					user: authorID,
+					time: moment().unix(),
+					description,
+					proof,
+				})
+			}
+			return prev
+		}, vouches)
 
 		return newVouches
 	})
 }
 
-const createVouchRequestForUsers = (
-	metionedUsers,
-	msg,
-	vouches
-) => {
+const createVouchRequestForUsers = (metionedUsers, msg, vouches) => {
 	return metionedUsers.map(user => {
 		// scrap through all vouches
 		// check if we vote in last 12h for this user
-		if (
-			checkIf12HoursAreOver(
-				vouches,
-				user.id,
-				msg.author.id
-			)
-		) {
+		if (checkIf12HoursAreOver(vouches, user.id, msg.author.id)) {
 			return addVouch(msg, user)
 				.then(({ description, proof }) => {
 					if (!validURL(proof)) throw 'PROOF'
@@ -98,7 +68,7 @@ const createVouchRequestForUsers = (
 						authorID: msg.author.id,
 						stamp: Date.now(),
 						description,
-						proof
+						proof,
 					}
 				})
 				.catch(err => {
@@ -135,7 +105,7 @@ const addVouch = (msg, user) => {
 		.awaitMessages(m => m.author.id === msg.author.id, {
 			max: 1,
 			time: 20000,
-			errors: ['time']
+			errors: ['time'],
 		})
 		.then(collected => {
 			const description = collected.array()[0]
@@ -144,20 +114,15 @@ const addVouch = (msg, user) => {
 			)
 
 			return msg.channel
-				.awaitMessages(
-					m => m.author.id === msg.author.id,
-					{
-						max: 1,
-						time: 20000,
-						errors: ['time']
-					}
-				)
+				.awaitMessages(m => m.author.id === msg.author.id, {
+					max: 1,
+					time: 20000,
+					errors: ['time'],
+				})
 				.then(collected => {
 					return {
-						description:
-							description.cleanContent,
-						proof: collected.array()[0]
-							.cleanContent
+						description: description.cleanContent,
+						proof: collected.array()[0].cleanContent,
 					}
 				})
 				.catch(console.log)
@@ -171,8 +136,7 @@ const checkIf12HoursAreOver = (vouches, id, authorId) => {
 
 	if (authorVotes == undefined) return true
 
-	const lastVouch =
-		authorVotes.length > 0 ? authorVotes[0] : null
+	const lastVouch = authorVotes.length > 0 ? authorVotes[0] : null
 	// if there is an entry for you check the time diff
 	if (lastVouch != null) {
 		// return (now - lastVouch.time) / 1000 >= 43200;

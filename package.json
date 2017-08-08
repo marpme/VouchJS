@@ -4,7 +4,7 @@
   "description": "",
   "main": "nudes.js",
   "scripts": {
-    "start": "node app/vouches.js",
+    "start": "babel-node ./app/vouches.js --presets es2015,stage-2",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,5 +14,10 @@
     "jsonfile": "^3.0.1",
     "moment": "^2.18.1",
     "shell-quote": "^1.6.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1"
   }
 }

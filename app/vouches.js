@@ -1,97 +1,88 @@
-const discord = require('discord.js')
-const jsonfs = require('jsonfile')
+import discord from 'discord.js'
+import jsonfs from 'jsonfile'
+
+import CONFIG from '../models/config'
+import voteVouch from './voteVouch'
+import vouchTopList from './voteTopList'
+import vouchHelp from './vouchHelp'
+import utils from './utils'
+import Logger from './logger'
+
 const client = new discord.Client()
+const loggers = new Map()
 
-const allowedGuilds = ['330811417467027456']
-const isIncludedGuild = ID => allowedGuilds.includes(ID)
-const isAdmin = authorID =>
-	'158195841335558144' === authorID
-const isBot = ID => '343713770406936576' === ID
-
-const vouchesFile = './models/vouches.json'
-const blockFile = './models/blocked.json'
-const token = ''
-const VERSION = '0.2.1b'
-
-// functionalities
-const voteVouch = require('./voteVouch')
-const vouchTopList = require('./voteTopList')
-
-let blocked = jsonfs.readFileSync(blockFile)
-let vouches = jsonfs.readFileSync(vouchesFile)
-
-console.log('--- Vouches table ---')
-console.log(vouches)
-console.log('---------------------')
-console.log('\n')
-console.log('--- Blocked table ---')
-console.log(blocked)
-console.log('---------------------')
+let blocked = jsonfs.readFileSync(CONFIG.blockFile)
+let vouches = jsonfs.readFileSync(CONFIG.vouchFile)
 
 client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`)
-	setInterval(() => {
-		client.sweepMessages(60)
-	}, 60000)
+	CONFIG.guilds.forEach(guild => {
+		const logger = registerLogger(guild)
+		logger.log(
+			'Connected',
+			'VouchJS connected to your guild and will serve you with his magic!'
+		)
+	})
 })
 
 client.on('message', msg => {
-	if (
-		msg.guild != null &&
-		isIncludedGuild(msg.guild.id) &&
-		!isBot(msg.author.id) &&
-		msg.channel.id === '330816857034457088' &&
-		msg.cleanContent.startsWith('!')
-	) {
-		if (
-			msg.cleanContent.includes('vouch') &&
-			msg.mentions.users.size === 1
-		) {
-			voteVouch
-				.vote(msg, blocked, vouches, client)
-				.then(newVouches => (vouches = newVouches))
-				.catch(err => {
-					console.log('A Vouch failed hard!')
-				})
-		} else if (msg.cleanContent.includes('vouch top')) {
-			vouchTopList.showTopList(
-				msg,
-				vouches,
-				client,
-				VERSION
-			)
-		} else if (msg.cleanContent.includes('vouch')) {
-			msg.channel.send({
-				embed: {
-					color: 0xffffff,
-					author: {
-						name: client.user.username,
-						icon_url: client.user.avatarURL
-					},
-					title: 'How to use VouchJS in general',
-					description:
-						'_- short guide for VouchJS_',
-					fields: [
-						{
-							name: 'Add a vouch for a user',
-							value:
-								'Write `!vouch @username` and follow the procedure. \nYou`ll have a 12 hour cooldown for each user per vote.'
-						},
-						{
-							name:
-								'View the **TOP10** traders',
-							value:
-								'Type `!vouch top` and you will receive a Top10 list of all traders.'
-						}
-					],
-					timestamp: new Date(),
-					footer: {
-						text: '© VouchJS (' + VERSION + ')'
-					}
-				}
-			})
-		}
+	const workGuild = utils.getGuildInformation(msg.guild.id, CONFIG)
+	if (!workGuild) {
+		console.error(
+			'Your guild is not registered. Please fill it into the config.js file!'
+		)
+		return
 	}
+
+	let logger = loggers.get(workGuild.guildId)
 })
 
-client.login(token)
+const handleMessage = (workGuild, logger, msg) => {
+	if (workGuild && isValidMessageHandler(msg, workGuild)) {
+		if (
+			msg.cleanContent.includes(CONFIG.commands.vouch) &&
+			msg.mentions.users.size === 1
+		) {
+			voteVouch(msg, blocked, vouches, client)
+				.then(newVouches => {
+					vouches = newVouches
+					logger.log('new Vouch has been registered!', 'no details avialable.')
+				})
+				.catch(err => {
+					logger.error(
+						'Vouch failed hard',
+						'This is a hard exception please inform kyon!'
+					)
+				})
+		} else if (msg.cleanContent.includes(CONFIG.commands.vouchTopList)) {
+			vouchTopList.showTopList(msg, vouches, client, VERSION)
+		} else if (msg.cleanContent.includes(CONFIG.commands.vouchHelp)) {
+			vouchHelp(client, CONFIG, msg)
+		}
+	}
+}
+
+const isValidMessageHandler = (msg, workGuild) =>
+	msg.guild != null &&
+	msg.channel.id == workGuild.vouchChannel &&
+	msg.cleanContent.startsWith(CONFIG.executor)
+
+const registerLogger = workGuild => {
+	try {
+		const channel = client.guilds
+			.array()
+			.find(guild => guild.id == workGuild.guildId)
+			.channels.array()
+			.find(channel => channel.id == workGuild.logChannel)
+		const logger = new Logger(channel, client)
+		loggers.set(workGuild.guildId, logger)
+		return logger
+	} catch (e) {
+		console.log(e)
+		console.error(
+			'Either your guild is not active or wrong or you have an invalid channel select inside the config.js.'
+		)
+	}
+}
+
+client.login(CONFIG.discordToken)
