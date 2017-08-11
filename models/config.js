@@ -12,10 +12,11 @@ export default {
 	vouchFile: './models/vouches.json',
 	commands: {
 		// renaming commands
-		vouch: 'vouch',
-		vouchHelp: 'vouchhelp',
-		vouchTopList: 'vouch top',
-		vouchBlock: 'vouchblock',
+		base: 'vouch',
+		vouchHelp: 'help',
+		vouchTopList: 'top',
+		vouchBlock: 'block',
+		vouchSingleList: 'list',
 	},
 	executor: '.',
 	version: '0.3.5b',

@@ -1,6 +1,7 @@
 import moment from 'moment'
+import _ from 'underscore'
 
-export default function(msg, blocked, vouches, client) {
+export default function(msg, blocked, vouches, client, logger) {
 	let users = msg.mentions.users.array()
 
 	let description
@@ -42,6 +43,12 @@ export default function(msg, blocked, vouches, client) {
 					proof,
 				})
 			}
+
+			logger.log(
+				'new Vouch has been registered!',
+				`<@${authorID}> has vouched for <@${user.id}> because of '${description}' `
+			)
+
 			return prev
 		}, vouches)
 
@@ -138,9 +145,9 @@ const checkIf12HoursAreOver = (vouches, id, authorId) => {
 
 	const lastVouch = authorVotes.length > 0 ? authorVotes[0] : null
 	// if there is an entry for you check the time diff
-	if (lastVouch != null) {
-		// return (now - lastVouch.time) / 1000 >= 43200;
-		return moment().diff(lastVouch.time) >= 43200
+	if (_.isObject(lastVouch)) {
+		const lastTime = moment.unix(lastVouch.time)
+		return moment().diff(lastTime, 'seconds') >= 43200
 	} else {
 		// never voted for him :(
 		return true
@@ -148,6 +155,6 @@ const checkIf12HoursAreOver = (vouches, id, authorId) => {
 }
 
 const validURL = str => {
-	const regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+	const regexp = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
 	return regexp.test(str)
 }

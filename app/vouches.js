@@ -1,18 +1,25 @@
 import discord from 'discord.js'
 import jsonfs from 'jsonfile'
+import admin from 'firebase-admin'
 
 import CONFIG from '../models/config'
+import FIREBASE_CONFIG from '../models/vouching-firebase'
 import voteVouch from './voteVouch'
 import vouchTopList from './voteTopList'
 import vouchHelp from './vouchHelp'
+import vouchSingleList from './vouchSingleList'
 import utils from './utils'
 import Logger from './logger'
 
+const firebase = admin.initializeApp({
+	credential: admin.credential.cert(FIREBASE_CONFIG),
+	databaseURL: 'https://vouching-dad0d.firebaseio.com',
+})
+
+const database = firebase.database()
 const client = new discord.Client()
 const loggers = new Map()
-
-let blocked = jsonfs.readFileSync(CONFIG.blockFile)
-let vouches = jsonfs.readFileSync(CONFIG.vouchFile)
+let vouchingData
 
 client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`)
@@ -35,18 +42,34 @@ client.on('message', msg => {
 	}
 
 	let logger = loggers.get(workGuild.guildId)
+	handleMessage(workGuild, logger, msg)
 })
 
 const handleMessage = (workGuild, logger, msg) => {
-	if (workGuild && isValidMessageHandler(msg, workGuild)) {
-		if (
-			msg.cleanContent.includes(CONFIG.commands.vouch) &&
+	if (
+		workGuild &&
+		isValidMessageHandler(msg, workGuild) &&
+		msg.cleanContent.startsWith(CONFIG.executor + CONFIG.commands.base)
+	) {
+		if (msg.cleanContent.includes(CONFIG.commands.vouchTopList)) {
+			vouchTopList.showTopList(msg, vouchingData.vouches, client, CONFIG)
+		} else if (msg.cleanContent.includes(CONFIG.commands.vouchHelp)) {
+			vouchHelp(client, CONFIG, msg)
+		} else if (
+			msg.cleanContent.includes(CONFIG.commands.vouchSingleList) &&
 			msg.mentions.users.size === 1
 		) {
-			voteVouch(msg, blocked, vouches, client)
+			vouchSingleList(
+				msg,
+				logger,
+				vouchingData.blocked,
+				vouchingData.vouches,
+				CONFIG
+			)
+		} else if (msg.mentions.users.size === 1) {
+			voteVouch(msg, vouchingData.blocked, vouchingData.vouches, client, logger)
 				.then(newVouches => {
-					vouches = newVouches
-					logger.log('new Vouch has been registered!', 'no details avialable.')
+					database.ref('vouches').set(newVouches)
 				})
 				.catch(err => {
 					logger.error(
@@ -54,10 +77,6 @@ const handleMessage = (workGuild, logger, msg) => {
 						'This is a hard exception please inform kyon!'
 					)
 				})
-		} else if (msg.cleanContent.includes(CONFIG.commands.vouchTopList)) {
-			vouchTopList.showTopList(msg, vouches, client, VERSION)
-		} else if (msg.cleanContent.includes(CONFIG.commands.vouchHelp)) {
-			vouchHelp(client, CONFIG, msg)
 		}
 	}
 }
@@ -80,9 +99,30 @@ const registerLogger = workGuild => {
 	} catch (e) {
 		console.log(e)
 		console.error(
-			'Either your guild is not active or wrong or you have an invalid channel select inside the config.js.'
+			'Either your guild is not active or you have an invalid channel select inside the config.js.'
 		)
 	}
 }
 
-client.login(CONFIG.discordToken)
+database
+	.ref('/')
+	.once('value')
+	.then(snapshot => {
+		vouchingData = snapshot.val()
+		database.ref('/vouches').on('value', snapshot => {
+			console.log('data changed')
+			vouchingData.vouches = snapshot.val()
+		})
+
+		database.ref('blocked').on('value', snapshot => {
+			vouchingData.blocked = snapshot.val()
+		})
+		client.login(CONFIG.discordToken)
+	})
+	.catch(errorObject => {
+		console.error(
+			'The read failed: ' +
+				errorObject.code +
+				`. We could connect to our database. Please retry and check your settings`
+		)
+	})

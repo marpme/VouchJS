@@ -10,7 +10,7 @@
 
 - [x] vouching for users
 - [x] top listing
-- [ ] single list of vouches
+- [x] single list of vouches
 - [ ] blocking of users
 - [ ] removing vouch(s) by user
 - [ ] removing vouch(s) by Date?
