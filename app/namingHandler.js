@@ -2,8 +2,6 @@ import _ from 'underscore'
 import utils from './utils'
 
 export default (client, vouches, blocked, CONFIG) => {
-  const vouchUserIds = Object.keys(vouches)
-
   const guilds = client.guilds
     .array()
     .map(
@@ -11,20 +9,28 @@ export default (client, vouches, blocked, CONFIG) => {
     )
     .filter(guild => !_.isUndefined(guild))
 
-  vouchUserIds.forEach(id => {
-    guilds.forEach(guild => {
-      const member = guild.members.get(id)
-      if (!_.isUndefined(member.user)) {
-        member
-          .setNickname(
-            `[${utils.countVouches(id, vouches)} VP] ${member.user.username}`
-          )
-          .catch(err => console.log('Naming Handler: ' + err))
-      }
+  const updateUsername = vouches => {
+    const vouchUserIds = Object.keys(vouches)
+
+    vouchUserIds.forEach(id => {
+      guilds.forEach(guild => {
+        const member = guild.members.get(id)
+        if (!_.isUndefined(member.user)) {
+          member
+            .setNickname(
+              `[${vouchCountString(id, vouches)}] ${member.user.username}`
+            )
+            .catch(err => console.log('Naming Handler: ' + err))
+        }
+      })
     })
-  })
+  }
 
-  const updateUsername = userID => {}
-
+  updateUsername(vouches)
   return updateUsername
+}
+
+const vouchCountString = (id, vouches) => {
+  const count = utils.countVouches(id, vouches)
+  return count > 1 ? `${count} Vouches` : `${count} Vouch`
 }

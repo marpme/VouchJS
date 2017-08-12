@@ -120,9 +120,11 @@ database
     vouchingData = snapshot.val()
     database.ref('/vouches').on('value', snapshot => {
       vouchingData.vouches = snapshot.val()
+      if (updateUsername instanceof Function)
+        updateUsername(vouchingData.vouches)
     })
 
-    database.ref('blocked').on('value', snapshot => {
+    database.ref('/blocked').on('value', snapshot => {
       vouchingData.blocked = snapshot.val()
     })
     client.login(CONFIG.discordToken)

@@ -139,19 +139,20 @@ const addVouch = (msg, user) => {
 
 const checkIf12HoursAreOver = (vouches, id, authorId) => {
   const now = Date.now()
-  const authorVotes = vouches[id]
+  const authorVouches = vouches[id]
 
-  if (authorVotes == undefined) return true
-
-  const lastVouch = authorVotes.length > 0 ? authorVotes[0] : null
-  // if there is an entry for you check the time diff
-  if (_.isObject(lastVouch)) {
-    const lastTime = moment.unix(lastVouch.time)
-    return moment().diff(lastTime, 'seconds') >= 43200
-  } else {
-    // never voted for him :(
-    return true
+  if (_.isArray(authorVouches)) {
+    const lastVouchFromAuthor = authorVouches.find(
+      vouch => vouch.user == authorId
+    )
+    // if there is an entry for you check the time diff
+    if (_.isObject(lastVouchFromAuthor)) {
+      const lastTime = moment.unix(lastVouchFromAuthor.time)
+      return moment().diff(lastTime, 'seconds') >= 43200
+    }
   }
+
+  return true
 }
 
 const validURL = str => {
