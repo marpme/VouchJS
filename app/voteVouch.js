@@ -1,7 +1,7 @@
 import moment from 'moment'
 import _ from 'underscore'
 
-export default function(msg, blocked, vouches, client, logger) {
+export default function(msg, blocked, vouches, client, logger, updateUsername) {
   let users = msg.mentions.users.array()
 
   let description
@@ -48,6 +48,8 @@ export default function(msg, blocked, vouches, client, logger) {
         'new Vouch has been registered!',
         `<@${authorID}> has vouched for <@${user.id}> because of '${description}' `
       )
+
+      updateUsername(user.id, prev)
 
       return prev
     }, vouches)

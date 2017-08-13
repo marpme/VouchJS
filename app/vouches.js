@@ -80,7 +80,14 @@ const handleMessage = (workGuild, logger, msg) => {
         CONFIG
       )
     } else if (msg.mentions.users.size === 1) {
-      voteVouch(msg, vouchingData.blocked, vouchingData.vouches, client, logger)
+      voteVouch(
+        msg,
+        vouchingData.blocked,
+        vouchingData.vouches,
+        client,
+        logger,
+        updateUsername
+      )
         .then(newVouches => {
           database.ref('vouches').set(newVouches)
         })
@@ -124,8 +131,6 @@ database
     vouchingData = snapshot.val()
     database.ref('/vouches').on('value', snapshot => {
       vouchingData.vouches = snapshot.val()
-      if (updateUsername instanceof Function)
-        updateUsername(vouchingData.vouches)
     })
 
     database.ref('/blocked').on('value', snapshot => {

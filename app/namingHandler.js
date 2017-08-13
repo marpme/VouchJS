@@ -13,6 +13,7 @@ export default (client, vouches, blocked, CONFIG, loggers) => {
     return guild.members.array().map(member => {
       const userVouches = vouches[member.user.id]
       if (
+        !hasVouchInUsername(client, member, loggers) &&
         _.isUndefined(userVouches) &&
         hasVouchInNickname(client, member, loggers)
       ) {
@@ -25,87 +26,48 @@ export default (client, vouches, blocked, CONFIG, loggers) => {
             )
         })
       }
-
-      hasVouchInUsername(client, member, loggers)
     })
   })
 
-  const updateUsername = vouches => {
-    const vouchUserIds = Object.keys(vouches)
-
-    vouchUserIds.forEach(id => {
-      guilds.forEach(guild => {
-        const member = guild.members.get(id)
-        if (
-          !_.isUndefined(member.user) &&
-          !hasVouchInUsername(client, member, loggers)
-        ) {
-          member
-            .setNickname(vouchCountString(id, vouches, member))
-            .catch(() =>
-              loggers
-                .get(guild.id)
-                .log(
-                  'Couldn`t set nickname',
-                  `Couldn't set the nickname for <@${id}>`
-                )
-            )
-        }
-      })
-    })
-  }
-
   client.on('guildMemberAdd', member => {
-    const id = member.user.id
-    guilds.forEach(guild => {
-      const member = guild.members.get(id)
-      if (
-        !_.isUndefined(member.user) &&
-        !hasVouchInUsername(client, member, loggers) &&
-        utils.countVouches(id, vouches) > 0
-      ) {
-        member
-          .setNickname(vouchCountString(id, vouches, member))
-          .catch(() =>
-            loggers
-              .get(guild.id)
-              .log(
-                'Couldn`t set nickname',
-                `Couldn't set the nickname for <@${id}>`
-              )
-          )
-      }
-    })
+    updateSingleUsername(member.user.id, guilds, vouches, client, loggers)
   })
 
   client.on('guildMemberUpdate', (oldMember, newMember) => {
-    const id = newMember.user.id
-    guilds.forEach(guild => {
-      const member = guild.members.get(id)
-      if (
-        !_.isUndefined(member.user) &&
-        !hasVouchInUsername(client, member, loggers) &&
-        utils.countVouches(id, vouches) > 0
-      ) {
-        member
-          .setNickname(vouchCountString(id, vouches, member))
-          .catch(err =>
-            loggers
-              .get(guild.id)
-              .log(
-                'Couldn`t set nickname',
-                `Couldn't set the nickname for <@${id}>`
-              )
-          )
-      }
-    })
+    updateSingleUsername(newMember.user.id, guilds, vouches, client, loggers)
   })
 
   Promise.all(NickNamesPromises).then(() => {
-    updateUsername(vouches)
+    Object.keys(vouches).forEach(id =>
+      updateSingleUsername(id, guilds, vouches, client, loggers)
+    )
   })
 
-  return updateUsername
+  return (userId, newVouches) => {
+    updateSingleUsername(userId, guilds, newVouches, client, loggers)
+  }
+}
+
+const updateSingleUsername = (id, guilds, vouches, client, loggers) => {
+  guilds.forEach(guild => {
+    const member = guild.members.get(id)
+    if (
+      !_.isUndefined(member.user) &&
+      !hasVouchInUsername(client, member, loggers) &&
+      utils.countVouches(id, vouches) > 0
+    ) {
+      return member
+        .setNickname(vouchCountString(id, vouches, member))
+        .catch(err =>
+          loggers
+            .get(guild.id)
+            .warn(
+              'Couldn`t set nickname',
+              `Couldn't set the nickname for <@${id}>`
+            )
+        )
+    }
+  })
 }
 
 const hasVouchInUsername = (client, member, loggers) => {
@@ -154,6 +116,6 @@ const reportInvalidUsername = (member, loggers) => {
     .catch(() => {
       loggers
         .get(member.guild.id)
-        .log('Couldn`t kick user', `Couldn't kick <@${member.user.id}>`)
+        .warn('Couldn`t kick user', `Couldn't kick <@${member.user.id}>`)
     })
 }
