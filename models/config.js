@@ -3,10 +3,10 @@ export default {
   guilds: [
     {
       guildId: '330811417467027456',
-      vouchChannel: '330816857034457088',
+      vouchChannel: '346005544336752640',
       logChannel: '344442214946177024',
       moderators: ['158195841335558144', '315830515951206402'],
-      marketplace: ['000000'],
+      marketplace: ['332582797493534720'],
     },
   ],
   blockFile: './models/blocked.json',
