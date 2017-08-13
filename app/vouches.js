@@ -11,6 +11,7 @@ import vouchSingleList from './vouchSingleList'
 import utils from './utils'
 import Logger from './logger'
 import namingHandler from './namingHandler'
+import _ from 'underscore'
 
 const firebase = admin.initializeApp({
   credential: admin.credential.cert(FIREBASE_CONFIG),
@@ -37,11 +38,14 @@ client.on('ready', () => {
     client,
     vouchingData.vouches,
     vouchingData.blocked,
-    CONFIG
+    CONFIG,
+    loggers
   )
 })
 
 client.on('message', msg => {
+  if (_.isUndefined(msg.guild) || msg.guild == null) return
+
   const workGuild = utils.getGuildInformation(msg.guild.id, CONFIG)
   if (!workGuild) {
     console.error(
