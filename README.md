@@ -13,7 +13,7 @@
 - [x] top listing
 - [x] single list of vouches 
 - [x] set count of vouches in user nickname  
-- [ ] blocking users
+- [x] blocking users
 - [ ] get access to #marketplace after X vouches
 - [ ] removing vouch(s) by user
 - [ ] removing vouch(s) by Date
@@ -21,4 +21,4 @@
 
 ##### improvement/bug list
 
-- [ ] don't check for every vouch user in naming handler
+- [x] don't check for every vouch user in naming handler
