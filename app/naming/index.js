@@ -7,14 +7,14 @@ import kickNaming from './kickNaming'
 
 const namingRegexp = /\[[0-9]*.*(vouches|vouch|blocked)\]/
 
-export default (client, loggers, CONFIG) => {
+export default (client, logging, CONFIG) => {
 	const allGuilds = client.guilds.array().filter(guild => utils.isWorkingGuild(guild.id, CONFIG))
 
 	const renaming = {
 		vouched: (member, vouches) => vouchesNaming(member, vouches),
 		blocked: member => blockedNaming(member),
 		clean: member => cleanNaming(member),
-		kick: member => kickNaming(member, loggers),
+		kick: member => kickNaming(member, logging),
 	}
 
 	const updateNaming = (id, vouches, blocked) => {
@@ -25,15 +25,15 @@ export default (client, loggers, CONFIG) => {
 				renaming.kick(member)
 			} else if (utils.isUserBlocked(id, blocked)) {
 				renaming.blocked(member).catch(() => {
-					couldNotSetName(member, loggers.get(guild.id))
+					couldNotSetName(member, logging(guild.id))
 				})
 			} else if (utils.hasVouches(id, vouches)) {
 				renaming.vouched(member, vouches).catch(() => {
-					couldNotSetName(member, loggers.get(guild.id))
+					couldNotSetName(member, logging(guild.id))
 				})
 			} else if (hasVouchInNickname(member)) {
 				renaming.clean(member).catch(() => {
-					couldNotSetName(member, loggers.get(guild.id))
+					couldNotSetName(member, logging(guild.id))
 				})
 			}
 		})

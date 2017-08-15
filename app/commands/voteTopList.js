@@ -7,8 +7,7 @@ export default (msg, vouches, client, CONFIG) => {
 		.setTitle('Traders - TOP 10 list')
 		.setAuthor('VouchJS', client.user.avatarURL)
 		.setColor(0xffffff)
-		.setFooter('© VouchJS (' + CONFIG.version + ')', client.user.avatarURL)
-		.setThumbnail(client.user.avatarURL)
+		.setFooter('© VouchJS (' + CONFIG.version + ')')
 		.setTimestamp()
 
 	const userVouchesMap = Object.keys(vouches)
@@ -32,5 +31,5 @@ export default (msg, vouches, client, CONFIG) => {
 		)
 	})
 
-	msg.channel.send({ embed })
+	msg.channel.send({ embed }).then(message => message.delete(60000))
 }

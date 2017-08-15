@@ -12,13 +12,15 @@ export default (member, loggers) => {
 			return member.kick()
 		})
 		.then(() => {
-			loggers
-				.get(member.guild.id)
-				.log('Kicked member due to invalid naming', `kicked member <@${member.user.id}>`)
+			loggers(member.guild.id).log(
+				'Kicked member due to invalid naming',
+				`kicked member <@${member.user.id}>`
+			)
 		})
 		.catch(() => {
-			loggers
-				.get(member.guild.id)
-				.warn('Couldn`t kick user', `Couldn't kick <@${member.user.id}>`)
+			loggers(member.guild.id).warn(
+				'Couldn`t kick user',
+				`Couldn't kick <@${member.user.id}>`
+			)
 		})
 }

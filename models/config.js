@@ -7,6 +7,8 @@ export default {
 			logChannel: '344442214946177024',
 			moderators: ['158195841335558144'],
 			marketplace: '332582797493534720',
+			marketAccess: 5, // count of minimum vouches >=
+			marketTimeout: 12, // waiting time in hours per message
 		},
 	],
 	blockFile: './models/blocked.json',

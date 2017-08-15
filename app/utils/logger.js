@@ -1,6 +1,6 @@
 import discord from 'discord.js'
 
-export default class Logger {
+class Logger {
 	constructor(channel, client) {
 		if (!(channel instanceof discord.Channel)) {
 			throw 'not a real channel!'
@@ -55,3 +55,36 @@ const createEmbed = (title, message, type, client) => ({
 	],
 	timestamp: new Date(),
 })
+
+const createLogging = (client, CONFIG) => {
+	const Loggers = new Map()
+	const createLogger = workGuild => {
+		try {
+			const channel = client.guilds
+				.array()
+				.find(guild => guild.id == workGuild.guildId)
+				.channels.array()
+				.find(channel => channel.id == workGuild.logChannel)
+			const logger = new Logger(channel, client)
+			Loggers.set(workGuild.guildId, logger)
+			return logger
+		} catch (e) {
+			console.log(e)
+			console.error(
+				'Either your guild is not active or you have an invalid channel select inside the config.js.'
+			)
+		}
+	}
+
+	CONFIG.guilds.forEach(guild => {
+		const logger = createLogger(guild)
+		logger.log(
+			'Connected',
+			'VouchJS connected to your guild and will serve you with his magic!'
+		)
+	})
+
+	return guildID => Loggers.get(guildID)
+}
+
+export default createLogging

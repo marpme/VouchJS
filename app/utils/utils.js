@@ -19,6 +19,11 @@ const utils = {
 
 	countVouches: (userId, vouchList) =>
 		_.isArray(vouchList[userId]) ? vouchList[userId].length : 0,
+
+	isValidMessageHandler: (msg, workGuild, CONFIG) =>
+		msg.guild != null &&
+		msg.channel.id == workGuild.vouchChannel &&
+		msg.cleanContent.startsWith(CONFIG.executor),
 }
 
 export default utils

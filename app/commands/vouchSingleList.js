@@ -54,5 +54,5 @@ export default (msg, logger, blocked, vouches, CONFIG) => {
 						'this user hasn`t got any vouch in the last 30 days'
 					)
 		})
-		.forEach(embed => msg.channel.send({ embed }))
+		.forEach(embed => msg.channel.send({ embed }).then(message => message.delete(60000)))
 }

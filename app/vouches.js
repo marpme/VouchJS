@@ -3,14 +3,17 @@ import admin from 'firebase-admin'
 
 import CONFIG from '../models/config'
 import FIREBASE_CONFIG from '../models/vouching-firebase'
+
 import voteVouch from './commands/voteVouch'
 import vouchTopList from './commands/voteTopList'
 import vouchHelp from './commands/vouchHelp'
 import vouchSingleList from './commands/vouchSingleList'
 import { block, unblock } from './commands/blocking'
+
 import utils from './utils/utils'
-import Logger from './utils/logger'
+import createLogging from './utils/logger'
 import namingHandler from './naming/index'
+import messageHandling from './commands/messageHandling'
 import _ from 'underscore'
 
 const firebase = admin.initializeApp({
@@ -20,22 +23,15 @@ const firebase = admin.initializeApp({
 
 const database = firebase.database()
 const client = new discord.Client()
-const loggers = new Map()
 
+let logging
 let vouchingData
 let updateNaming
 
 client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`)
-	CONFIG.guilds.forEach(guild => {
-		const logger = registerLogger(guild)
-		logger.log(
-			'Connected',
-			'VouchJS connected to your guild and will serve you with his magic!'
-		)
-	})
-
-	updateNaming = namingHandler(client, loggers, CONFIG)
+	logging = createLogging(client, CONFIG, new Map())
+	updateNaming = namingHandler(client, logging, CONFIG)
 	client.guilds.forEach(guild => {
 		const members = guild.members.array()
 		members.forEach(member => {
@@ -45,7 +41,7 @@ client.on('ready', () => {
 })
 
 client.on('message', msg => {
-	if (_.isUndefined(msg.guild) || msg.guild == null) return
+	if (_.isUndefined(msg.guild) || msg.guild == null || msg.author.id == client.user.id) return
 
 	const workGuild = utils.getGuildInformation(msg.guild.id, CONFIG)
 	if (!workGuild) {
@@ -53,14 +49,14 @@ client.on('message', msg => {
 		return
 	}
 
-	let logger = loggers.get(workGuild.guildId)
-	handleMessage(workGuild, logger, msg)
+	messageHandling(msg, vouchingData.vouches, vouchingData.blocked, workGuild)
+	handleMessage(workGuild, logging(workGuild.guildId), msg)
 })
 
 const handleMessage = (workGuild, logger, msg) => {
 	if (
 		workGuild &&
-		isValidMessageHandler(msg, workGuild) &&
+		utils.isValidMessageHandler(msg, workGuild, CONFIG) &&
 		msg.cleanContent.startsWith(CONFIG.executor + CONFIG.commands.base)
 	) {
 		if (msg.cleanContent.includes(CONFIG.commands.vouchTopList)) {
@@ -103,7 +99,7 @@ const handleMessage = (workGuild, logger, msg) => {
 				.then(newVouches => {
 					database.ref('vouches').set(newVouches)
 				})
-				.catch(err => {
+				.catch(() => {
 					logger.error(
 						'Vouch failed hard',
 						'This is a hard exception please inform kyon!'
@@ -113,34 +109,20 @@ const handleMessage = (workGuild, logger, msg) => {
 	}
 }
 
-const isValidMessageHandler = (msg, workGuild) =>
-	msg.guild != null &&
-	msg.channel.id == workGuild.vouchChannel &&
-	msg.cleanContent.startsWith(CONFIG.executor)
+client.on('guildMemberAdd', newMember => {
+	updateNaming(newMember.user.id, vouchingData.vouches, vouchingData.blocked)
+})
 
-const registerLogger = workGuild => {
-	try {
-		const channel = client.guilds
-			.array()
-			.find(guild => guild.id == workGuild.guildId)
-			.channels.array()
-			.find(channel => channel.id == workGuild.logChannel)
-		const logger = new Logger(channel, client)
-		loggers.set(workGuild.guildId, logger)
-		return logger
-	} catch (e) {
-		console.log(e)
-		console.error(
-			'Either your guild is not active or you have an invalid channel select inside the config.js.'
-		)
-	}
-}
+client.on('guildMemberUpdate', (oldMember, newMember) => {
+	updateNaming(newMember.user.id, vouchingData.vouches, vouchingData.blocked)
+})
 
 database
 	.ref('/')
 	.once('value')
 	.then(snapshot => {
 		vouchingData = snapshot.val()
+
 		database.ref('/vouches').on('value', snapshot => {
 			vouchingData.vouches = snapshot.val()
 		})
@@ -148,6 +130,7 @@ database
 		database.ref('/blocked').on('value', snapshot => {
 			vouchingData.blocked = snapshot.val()
 		})
+
 		client.login(CONFIG.discordToken)
 	})
 	.catch(errorObject => {
