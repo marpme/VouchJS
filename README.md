@@ -14,7 +14,7 @@
 - [x] single list of vouches 
 - [x] set count of vouches in user nickname  
 - [x] blocking users
-- [ ] get access to #marketplace after X vouches
+- [x] get access to #marketplace after X vouches
 - [ ] removing vouch(s) by user
 - [ ] removing vouch(s) by Date
 
