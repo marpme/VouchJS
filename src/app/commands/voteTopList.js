@@ -4,7 +4,7 @@ import utils from '../utils/utils'
 
 export default (msg, vouches, client, CONFIG) => {
 	const embed = new Discord.RichEmbed()
-		.setTitle('Traders - TOP 10 list')
+		.setTitle(':trophy: Traders - TOP 10 list :medal:')
 		.setAuthor('VouchJS', client.user.avatarURL)
 		.setColor(0xffffff)
 		.setFooter('© VouchJS (' + CONFIG.version + ')')
@@ -31,5 +31,5 @@ export default (msg, vouches, client, CONFIG) => {
 		)
 	})
 
-	msg.channel.send({ embed }).then(message => message.delete(60000))
+	msg.channel.send({ embed })
 }
