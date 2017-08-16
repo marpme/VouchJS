@@ -22,3 +22,8 @@
 ##### improvement/bug list
 
 - [x] don't check for every vouch user in naming handler
+- [ ] marketplace role granting after X vouches (5)
+- [ ] bump - watcher
+- [ ] text update (vouch help)
+- [ ] improve vote vouch 
+- [ ] outdated single list text
