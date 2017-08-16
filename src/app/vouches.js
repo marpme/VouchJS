@@ -13,7 +13,7 @@ import { block, unblock } from './commands/blocking'
 import utils from './utils/utils'
 import createLogging from './utils/logger'
 import namingHandler from './naming/index'
-import messageHandling from './commands/messageHandling'
+// import messageHandling from './commands/messageHandling'
 import _ from 'underscore'
 
 const firebase = admin.initializeApp({
@@ -49,7 +49,7 @@ client.on('message', msg => {
 		return
 	}
 
-	messageHandling(msg, vouchingData.vouches, vouchingData.blocked, workGuild)
+	// messageHandling(msg, vouchingData.vouches, vouchingData.blocked, workGuild)
 	handleMessage(workGuild, logging(workGuild.guildId), msg)
 })
 
