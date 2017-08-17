@@ -10,6 +10,7 @@ import vouchHelp from './commands/vouchHelp'
 import vouchSingleList from './commands/vouchSingleList'
 import { block, unblock } from './commands/blocking'
 import reset from './commands/reset'
+import remove from './commands/remove'
 
 import utils from './utils/utils'
 import createLogging from './utils/logger'
@@ -99,11 +100,36 @@ const handleMessage = (workGuild, logger, msg) => {
 			msg.cleanContent.includes(CONFIG.commands.vouchReset) &&
 			msg.mentions.users.size == 1
 		) {
-			reset(msg, vouchingData.vouches).then(newVouches => {
+			reset(msg, vouchingData.vouches, workGuild).then(newVouches => {
 				database.ref('vouches').set(newVouches)
+				updateNaming(msg.author.id, newVouches, vouchingData.blocked)
+			})
+		} else if (
+			msg.cleanContent.includes(CONFIG.commands.vouchRemove) &&
+			msg.mentions.users.size == 1
+		) {
+			remove(
+				msg,
+				logger,
+				vouchingData.vouches,
+				vouchingData.blocked,
+				workGuild,
+				vouchSingleList,
+				CONFIG
+			).then(newVouches => {
+				database.ref('vouches').set(newVouches)
+				updateNaming(msg.author.id, newVouches, vouchingData.blocked)
 			})
 		} else if (msg.mentions.users.size === 1) {
-			voteVouch(msg, vouchingData.blocked, vouchingData.vouches, client, logger, updateNaming)
+			voteVouch(
+				msg,
+				vouchingData.blocked,
+				vouchingData.vouches,
+				client,
+				logger,
+				updateNaming,
+				CONFIG
+			)
 				.then(newVouches => {
 					database.ref('vouches').set(newVouches)
 				})

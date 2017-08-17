@@ -2,7 +2,7 @@ import moment from 'moment'
 import _ from 'underscore'
 import utils from '../utils/utils'
 
-export default function(msg, blocked, vouches, client, logger, updateUsername) {
+export default function(msg, blocked, vouches, client, logger, updateUsername, CONFIG) {
 	let users = msg.mentions.users.array()
 
 	let description
@@ -15,6 +15,11 @@ export default function(msg, blocked, vouches, client, logger, updateUsername) {
 		// check if the voucher is blocker RIP
 	} else if (utils.isUserBlocked(msg.author.id, blocked)) {
 		msg.reply(":no_entry: You can't vouch anymore, you have been blocked.")
+		return Promise.resolve(vouches)
+	} else if (users.find(user => user.id === CONFIG.botID) != undefined) {
+		msg.reply(
+			":open_mouth: Great that you are loving our vouchbot, but you can't vouch for me! "
+		)
 		return Promise.resolve(vouches)
 	}
 
@@ -46,8 +51,8 @@ export default function(msg, blocked, vouches, client, logger, updateUsername) {
 			}
 
 			logger.log(
-				'new Vouch has been registered!',
-				`<@${authorID}> has vouched for <@${user.id}> because of '${description}' `
+				'new Vouch has been registered!\n',
+				`<@${authorID}> has vouched for <@${user.id}> \n\n **Description:** '${description}' \n\n **Proof:** ${proof} `
 			)
 
 			updateUsername(user.id, prev, blocked)

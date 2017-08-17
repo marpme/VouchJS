@@ -82,6 +82,10 @@ const createLogging = (client, CONFIG) => {
 			'Connected',
 			'VouchJS connected to your guild and will serve you with his magic!'
 		)
+		logger.log(
+			'**Guild Moderators:**\n',
+			`${guild.moderators.map(id => `<@${id}>`).join('\n\n')}`
+		)
 	})
 
 	return guildID => Loggers.get(guildID)

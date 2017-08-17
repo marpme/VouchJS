@@ -1,7 +1,12 @@
 import _ from 'underscore'
-export default (msg, vouches) => {
+import utils from '../utils/utils'
+export default (msg, vouches, workingGuild) => {
 	return new Promise(resolve => {
-		const { [msg.author.id]: remove, ...rest } = vouches
-		return resolve(rest)
+		if (utils.isModerator(msg.author.id, workingGuild)) {
+			const { [msg.mentions.users.array()[0].id]: remove, ...rest } = vouches
+			return resolve(rest)
+		}
+
+		return resolve(vouches)
 	})
 }
