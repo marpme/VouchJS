@@ -21,7 +21,8 @@ export default {
 		vouchBlock: 'block',
 		vouchUnblock: 'unblock',
 		vouchSingleList: 'list',
+		vouchReset: 'reset',
 	},
 	executor: '.',
-	version: '0.3.5b',
+	version: '0.4.0b',
 }

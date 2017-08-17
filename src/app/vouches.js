@@ -9,6 +9,7 @@ import vouchTopList from './commands/voteTopList'
 import vouchHelp from './commands/vouchHelp'
 import vouchSingleList from './commands/vouchSingleList'
 import { block, unblock } from './commands/blocking'
+import reset from './commands/reset'
 
 import utils from './utils/utils'
 import createLogging from './utils/logger'
@@ -93,6 +94,13 @@ const handleMessage = (workGuild, logger, msg) => {
 				updateNaming
 			).then(newBlocked => {
 				database.ref('blocked').set(newBlocked)
+			})
+		} else if (
+			msg.cleanContent.includes(CONFIG.commands.vouchReset) &&
+			msg.mentions.users.size == 1
+		) {
+			reset(msg, vouchingData.vouches).then(newVouches => {
+				database.ref('vouches').set(newVouches)
 			})
 		} else if (msg.mentions.users.size === 1) {
 			voteVouch(msg, vouchingData.blocked, vouchingData.vouches, client, logger, updateNaming)
