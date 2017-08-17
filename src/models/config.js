@@ -3,14 +3,15 @@ export default {
 	guilds: [
 		{
 			guildId: '330811417467027456',
-			vouchChannel: '346005544336752640',
+			vouchChannel: '347474370752413698',
 			logChannel: '344442214946177024',
-			moderators: ['158195841335558144'],
-			marketplace: '332582797493534720',
+			moderators: ['158195841335558144', '98468186311106560'],
+			marketplace: '347473396935950337',
 			marketAccess: 5, // count of minimum vouches >=
 			marketTimeout: 12, // waiting time in hours per message
 		},
 	],
+	botID: '347455479028514816',
 	blockFile: './models/blocked.json',
 	vouchFile: './models/vouches.json',
 	commands: {
@@ -22,7 +23,8 @@ export default {
 		vouchUnblock: 'unblock',
 		vouchSingleList: 'list',
 		vouchReset: 'reset',
+		vouchRemove: 'remove',
 	},
-	executor: '.',
+	executor: '!',
 	version: '0.4.0b',
 }
