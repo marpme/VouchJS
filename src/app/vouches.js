@@ -10,7 +10,7 @@ import vouchHelp from './commands/vouchHelp'
 import vouchSingleList from './commands/vouchSingleList'
 import { block, unblock } from './commands/blocking'
 import reset from './commands/reset'
-import remove from './commands/remove'
+import remove, { removeVouches } from './commands/remove'
 
 import utils from './utils/utils'
 import createLogging from './utils/logger'
@@ -128,7 +128,10 @@ const handleMessage = (workGuild, logger, msg) => {
 				client,
 				logger,
 				updateNaming,
-				CONFIG
+				CONFIG,
+				workGuild,
+				removeVouches,
+				database
 			)
 				.then(newVouches => {
 					database.ref('vouches').set(newVouches)
@@ -139,6 +142,8 @@ const handleMessage = (workGuild, logger, msg) => {
 						'This is a hard exception please inform kyon!'
 					)
 				})
+		} else {
+			vouchHelp(client, CONFIG, msg)
 		}
 	}
 }

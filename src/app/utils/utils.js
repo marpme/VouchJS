@@ -12,6 +12,8 @@ const utils = {
 		return user != null ? user.tag : 'User not longer in Guild'
 	},
 
+	isGuildMemberStillThere: (id, msg) => msg.guild.members.get(id) != undefined,
+
 	isUserBlocked: (userid, blockedList) =>
 		_.isNumber(blockedList[userid]) && blockedList[userid] === 1,
 

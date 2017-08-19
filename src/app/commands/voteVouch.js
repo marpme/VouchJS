@@ -2,11 +2,21 @@ import moment from 'moment'
 import _ from 'underscore'
 import utils from '../utils/utils'
 
-export default function(msg, blocked, vouches, client, logger, updateUsername, CONFIG) {
+export default function(
+	msg,
+	blocked,
+	vouches,
+	client,
+	logger,
+	updateUsername,
+	CONFIG,
+	workGuild,
+	removeVouches,
+	database
+) {
 	let users = msg.mentions.users.array()
-
-	let description
-	let proof
+	const then = moment.unix(msg.member.joinedTimestamp / 1000)
+	const diff = moment().diff(then, 'hours')
 
 	// check if the user wants to vouch himself
 	if (users.find(user => user.id === msg.author.id) != undefined) {
@@ -19,6 +29,12 @@ export default function(msg, blocked, vouches, client, logger, updateUsername, C
 	} else if (users.find(user => user.id === CONFIG.botID) != undefined) {
 		msg.reply(
 			":open_mouth: Great that you are loving our vouchbot, but you can't vouch for me! "
+		)
+		return Promise.resolve(vouches)
+	} else if (msg.member != undefined && diff < 0) {
+		msg.reply(
+			`:no_entry_sign: You have to wait another ${72 -
+				diff} hour(s) to get access to the vouch bot!`
 		)
 		return Promise.resolve(vouches)
 	}
@@ -50,10 +66,66 @@ export default function(msg, blocked, vouches, client, logger, updateUsername, C
 				})
 			}
 
-			logger.log(
-				'new Vouch has been registered!\n',
-				`<@${authorID}> has vouched for <@${user.id}> \n\n **Description:** '${description}' \n\n **Proof:** ${proof} `
-			)
+			const reactionMessage = logger
+				.vouchLog([
+					{
+						title: 'Trader were:',
+						message: `between <@${authorID}> (voucher) and <@${user.id}> (vouched)`,
+					},
+					{
+						title: `Description:`,
+						message: description,
+					},
+					{
+						title: `Proof:`,
+						message: proof,
+					},
+				])
+				.then(message => message.react('⛔'))
+
+			// TODO: Maybe later Kappa
+			reactionMessage.then(reaction => {
+				return reaction.message
+					.awaitReactions(reaction => reaction.emoji.toString() === '⛔', {
+						max: 2,
+						time: 8.64e7, // fuck it, these are 6 HOURS
+						errors: ['time'],
+					})
+					.then(() => {
+						const newUserVouch = removeVouches(
+							{
+								cleanContent: '1',
+							},
+							prev[user.id]
+						)
+						database
+							.ref('/vouches')
+							.once('value')
+							.then(snapshot => {
+								const currentVouches = snapshot.val()
+								if (currentVouches[user.id]) {
+									currentVouches[user.id] = newUserVouch
+									database.ref('vouches').set(currentVouches)
+								} else {
+									throw 'Couldn`t set the real vouches for the current user!'
+								}
+							})
+							.then(() => {
+								reactionMessage.then(({ message }) => message.delete()).then(() => {
+									logger.log(
+										'Delete Vouch from User:',
+										`Vouch has been revoked from user <@${user.id}>!`
+									)
+								})
+							})
+							.catch(err => {
+								logger.err('VoteVouch:', err)
+							})
+					})
+					.catch(err => {
+						reactionMessage.then(({ message }) => message.clearReactions())
+					})
+			})
 
 			updateUsername(user.id, prev, blocked)
 

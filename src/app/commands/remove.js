@@ -19,7 +19,15 @@ export default (msg, logger, vouches, blocked, workingGuild, singleList, CONFIG)
 				})
 			})
 			.then(answers => {
-				return removeVouches(answers.array()[0], vouches, userId)
+				const newUserVouches = removeVouches(answers.array()[0], vouches[userId].slice(0))
+
+				const difference = vouches[userId].length - newUserVouches.length
+				vouches[userId] = newUserVouches
+
+				logger.log(`Removing vouch:`, `Removed ${difference} vouche(s) from <@${userId}>`)
+				msg.reply(`Removed ${difference} vouch(es) from <@${userId}>`)
+
+				return vouches
 			})
 			.catch(answers => {
 				msg.reply('You didn`t answer within the 15 seconds time frame. Try again!')
@@ -30,15 +38,15 @@ export default (msg, logger, vouches, blocked, workingGuild, singleList, CONFIG)
 	return Promise.resolve(vouches)
 }
 
-const removeVouches = (answers, vouches, userId) => {
+export const removeVouches = (answers, userVouches) => {
 	const ids = answers.cleanContent
 		.split(',')
 		.map(id => parseInt(id, 10) - 1)
-		.filter(id => id < vouches[userId].length && id >= 0)
+		.filter(id => id < userVouches.length && id >= 0)
 
 	ids.forEach(id => {
-		vouches[userId].splice(id, 1)
+		userVouches.splice(id, 1)
 	})
 
-	return vouches
+	return userVouches
 }

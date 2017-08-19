@@ -11,6 +11,7 @@ export default (msg, vouches, client, CONFIG) => {
 		.setTimestamp()
 
 	const userVouchesMap = Object.keys(vouches)
+		.filter(key => utils.isGuildMemberStillThere(key, msg))
 		.map(key => ({
 			key,
 			count: vouches[key].length,

@@ -1,8 +1,8 @@
-import discord from 'discord.js'
+import Discord from 'discord.js'
 
 class Logger {
 	constructor(channel, client) {
-		if (!(channel instanceof discord.Channel)) {
+		if (!(channel instanceof Discord.Channel)) {
 			throw 'not a real channel!'
 		}
 		this.client = client
@@ -10,28 +10,36 @@ class Logger {
 		this.logStack = []
 	}
 
+	vouchLog(fields) {
+		const embed = createEmbeddedWithoutFields(':ballot_box_with_check:')
+		fields.forEach(({ title, message }) => embed.addField(title, message, true))
+		return this.channel.send({
+			embed,
+		})
+	}
+
 	log(title, message) {
 		console.log(message)
-		this.channel.send({
-			embed: createEmbed(title, message, 'LOG', this.client),
+		this.addTologStack(title, message, ':ballot_box_with_check:')
+		return this.channel.send({
+			embed: createEmbed(title, message, ':ballot_box_with_check:', this.client),
 		})
-		this.addTologStack(title, message, 'LOG')
 	}
 
 	warn(title, message) {
 		console.log(message)
-		this.channel.send({
-			embed: createEmbed(title, message, 'WARN', this.client),
+		this.addTologStack(title, message, ':warning:')
+		return this.channel.send({
+			embed: createEmbed(title, message, ':warning:', this.client),
 		})
-		this.addTologStack(title, message, 'WARN')
 	}
 
 	error(title, message) {
 		console.log(message)
-		this.channel.send({
-			embed: createEmbed(title, message, 'ERROR', this.client),
+		this.addTologStack(title, message, ':no_entry:')
+		return this.channel.send({
+			embed: createEmbed(title, message, ':no_entry:', this.client),
 		})
-		this.addTologStack(title, message, 'ERROR')
 	}
 
 	addTologStack(title, message, type) {
@@ -46,7 +54,7 @@ const createEmbed = (title, message, type, client) => ({
 		name: client.user.username,
 		icon_url: client.user.avatarURL,
 	},
-	title: 'Logging type: **' + type + '**',
+	title: `${type} logging`,
 	fields: [
 		{
 			name: title,
@@ -55,6 +63,14 @@ const createEmbed = (title, message, type, client) => ({
 	],
 	timestamp: new Date(),
 })
+
+const createEmbeddedWithoutFields = type => {
+	return new Discord.RichEmbed()
+		.setTitle(`${type} logging`)
+		.setAuthor('VouchJS')
+		.setColor(0xffffff)
+		.setTimestamp()
+}
 
 const createLogging = (client, CONFIG) => {
 	const Loggers = new Map()

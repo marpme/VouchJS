@@ -20,6 +20,7 @@ export default (client, logging, CONFIG) => {
 	const updateNaming = (id, vouches, blocked) => {
 		allGuilds.forEach(guild => {
 			const member = guild.members.get(id)
+			if (member == undefined) return
 
 			if (hasVouchInUsername(member)) {
 				renaming.kick(member)
@@ -50,7 +51,7 @@ const couldNotSetName = (member, logger) => {
 }
 
 const hasVouchInUsername = member => {
-	if (!_.isUndefined(member)) {
+	if (!_.isUndefined(member) && member != null) {
 		return namingRegexp.test(member.user.username.toLowerCase())
 	} else {
 		return false
@@ -58,7 +59,7 @@ const hasVouchInUsername = member => {
 }
 
 const hasVouchInNickname = member => {
-	if (_.isUndefined(member) && typeof member.nickname === 'string') {
+	if (!_.isUndefined(member) && member != null && typeof member.nickname === 'string') {
 		return namingRegexp.test(member.nickname.toLowerCase())
 	} else return false
 }

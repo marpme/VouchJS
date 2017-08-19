@@ -3,5 +3,5 @@ export default member => {
 }
 
 const blockMemberString = member => {
-	return `[BLOCKED] ${member.user.username}`.slice(0, 32)
+	return `[B] ${member.user.username}`.slice(0, 32)
 }

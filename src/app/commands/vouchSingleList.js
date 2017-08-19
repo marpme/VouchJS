@@ -1,13 +1,123 @@
 import moment from 'moment'
 import Discord from 'discord.js'
 import utils from '../utils/utils'
+import _ from 'lodash'
 
-const createEmbedded = (msg, userId, CONFIG) => {
+const CHUNKCOUNT = 5
+
+export default (msg, logger, blocked, vouches, CONFIG) => {
+	const user = msg.mentions.users.array()[0]
+	if (user != undefined && user != null) {
+		const userVouches = vouches[user.id]
+		const chunkes = _.chunk(userVouches, CHUNKCOUNT) // [[5],[5]]
+		let currentChunk = 0
+
+		const simpleEmbed = footer => createEmbedded(msg, user.id, CONFIG, footer)
+
+		const listMessage = msg.channel
+			.send({
+				embed: fillEmbedded(
+					simpleEmbed(`${currentChunk + 1} / ${chunkes.length} Pages`),
+					chunkes[currentChunk],
+					currentChunk
+				),
+			})
+			.then(message => message.react('⬅'))
+			.then(reaction => reaction.message.react('➡').then(reaction => reaction.message))
+
+		pageNavigationAwaiting(
+			listMessage,
+			chunkes,
+			currentChunk,
+			simpleEmbed,
+			msg.author.id
+		).catch(message => {
+			return message.clearReactions()
+		})
+
+		return listMessage
+	}
+}
+
+const pageNavigationAwaiting = (listMessage, chunkes, currentChunk, simpleEmbed, authorId) => {
+	return listMessage
+		.then(message =>
+			message.awaitReactions(
+				(reaction, author) =>
+					checkReactionAwait(reaction, author, authorId, chunkes.length, currentChunk),
+				{
+					max: 1,
+					time: 15000,
+					errors: ['time'],
+				}
+			)
+		)
+		.then(collection => {
+			const first = collection.array()[0]
+
+			if (!first) {
+				return
+			}
+
+			if (first.emoji.name == '➡') {
+				currentChunk += 1
+			} else if (first.emoji.name == '⬅') {
+				currentChunk -= 1
+			}
+
+			return pageNavigationAwaiting(
+				first.message
+					.edit({
+						embed: fillEmbedded(
+							simpleEmbed(`${currentChunk + 1} / ${chunkes.length} Pages`),
+							chunkes[currentChunk],
+							currentChunk
+						),
+					})
+					.then(message => {
+						return message
+					}),
+				chunkes,
+				currentChunk,
+				simpleEmbed,
+				authorId
+			)
+		})
+		.catch(() => {
+			return listMessage.then(message => {
+				message.clearReactions()
+			})
+		})
+}
+
+const checkReactionAwait = (messageReaction, author, authorId, chunkesLen, currentIndex) => {
+	const correctAuthor = author.id == authorId
+	const MustBeEmoji = messageReaction.emoji.name == '➡' || messageReaction.emoji.name == '⬅'
+
+	if (correctAuthor && MustBeEmoji) {
+		if (currentIndex == 0 && messageReaction.emoji.name == '⬅') return false
+		else if (currentIndex == chunkesLen - 1 && messageReaction.emoji.name == '➡') {
+			return false
+		} else return true
+	} else {
+		return false
+	}
+}
+
+const fillEmbedded = (embed, chunk, count) => {
+	let newEmbed = embed
+	chunk.forEach((field, index) => {
+		newEmbed = addVouchField(newEmbed, CHUNKCOUNT * count + index + 1, field)
+	})
+	return newEmbed
+}
+
+const createEmbedded = (msg, userId, CONFIG, footer) => {
 	return new Discord.RichEmbed()
-		.setTitle(`${utils.findGuildMember(userId, msg)} newest Vouches (within the last 30 days)`)
+		.setTitle(`${utils.findGuildMember(userId, msg)} newest Vouches`)
 		.setAuthor('VouchJS')
 		.setColor(0xffffff)
-		.setFooter('© VouchJS (' + CONFIG.version + ')')
+		.setFooter(footer)
 		.setTimestamp()
 }
 
@@ -15,46 +125,5 @@ const addVouchField = (embed, index, { description, proof, time, user }) => {
 	return embed.addField(
 		index + '. vouch at ' + moment.unix(time).format('MMM Do YY, h:mm:ss a '),
 		`voucher: <@${user}> \nproof: ${proof} \ndescription: ${description}`
-	)
-}
-
-export default (msg, logger, blocked, vouches, CONFIG) => {
-	let users = msg.mentions.users.array()
-	let uniqueMetion = [...new Set(users)]
-
-	return Promise.resolve(
-		uniqueMetion
-			.map(
-				({ id }) =>
-					!utils.isUserBlocked(id, blocked) && utils.hasVouches(id, vouches)
-						? { id, vouches: vouches[id] }
-						: { id, vouches: [] }
-			)
-			.map(({ id, vouches }) => {
-				const embed = createEmbedded(msg, id, CONFIG)
-				if (utils.isUserBlocked(id, blocked)) {
-					return embed.addField(
-						'Blocked User',
-						`The User (<@${id}>) has been blocked. Vouches are still stored, but not visible for you.`
-					)
-				}
-
-				const lastestVouches = vouches.filter(vouch => {
-					const time = moment.unix(vouch.time)
-					return moment().diff(time, 'days') < 30
-				})
-
-				return lastestVouches.length > 0
-					? lastestVouches.reduce(
-							(currentEmbed, vouch, index) =>
-								addVouchField(currentEmbed, index + 1, vouch),
-							embed
-						)
-					: embed.addField(
-							'No vouches available ... ',
-							'The user haven`t got any votes, yet!'
-						)
-			})
-			.map(embed => msg.channel.send({ embed }))
 	)
 }
