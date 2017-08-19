@@ -52,6 +52,7 @@ client.on('message', msg => {
 	}
 
 	// messageHandling(msg, vouchingData.vouches, vouchingData.blocked, workGuild)
+	// updateNaming(msg.author.id, vouchingData.vouches, vouchingData.blocked)
 	handleMessage(workGuild, logging(workGuild.guildId), msg)
 })
 
@@ -102,7 +103,7 @@ const handleMessage = (workGuild, logger, msg) => {
 		) {
 			reset(msg, vouchingData.vouches, workGuild).then(newVouches => {
 				database.ref('vouches').set(newVouches)
-				updateNaming(msg.author.id, newVouches, vouchingData.blocked)
+				updateNaming(msg.mentions.users.array()[0].id, newVouches, vouchingData.blocked)
 			})
 		} else if (
 			msg.cleanContent.includes(CONFIG.commands.vouchRemove) &&
@@ -118,7 +119,7 @@ const handleMessage = (workGuild, logger, msg) => {
 				CONFIG
 			).then(newVouches => {
 				database.ref('vouches').set(newVouches)
-				updateNaming(msg.author.id, newVouches, vouchingData.blocked)
+				updateNaming(msg.mentions.users.array()[0].id, newVouches, vouchingData.blocked)
 			})
 		} else if (msg.mentions.users.size === 1) {
 			voteVouch(

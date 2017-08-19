@@ -2,12 +2,12 @@ export default {
 	discordToken: '',
 	guilds: [
 		{
-			guildId: '330811417467027456',
-			vouchChannel: '347474370752413698',
-			logChannel: '344442214946177024',
-			moderators: ['158195841335558144', '98468186311106560'],
-			marketplace: '347473396935950337',
-			marketAccess: 5, // count of minimum vouches >=
+			guildId: '348155543199678468',
+			vouchChannel: '348156625686888449',
+			logChannel: '348156702383800321',
+			moderators: ['158195841335558144'],
+			marketplaceRole: '348156258731163648',
+			marketAccess: 3, // count of minimum vouches >=
 			marketTimeout: 12, // waiting time in hours per message
 		},
 	],

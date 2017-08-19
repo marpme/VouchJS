@@ -8,8 +8,5 @@ export default (member, vouches) => {
 	return member.setNickname(vouchCountString(member, vouchCount))
 }
 
-const vouchCountString = (member, vouchCount) => {
-	return vouchCount > 1
-		? `[${vouchCount} Vouches] ${member.user.username}`.slice(0, 32)
-		: `[${vouchCount} Vouch] ${member.user.username}`.slice(0, 32)
-}
+const vouchCountString = (member, vouchCount) =>
+	`[${vouchCount}VP] ${member.user.username}`.slice(0, 32)

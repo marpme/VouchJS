@@ -106,6 +106,7 @@ export default function(
 								if (currentVouches[user.id]) {
 									currentVouches[user.id] = newUserVouch
 									database.ref('vouches').set(currentVouches)
+									updateUsername(user.id, currentVouches, blocked)
 								} else {
 									throw 'Couldn`t set the real vouches for the current user!'
 								}
