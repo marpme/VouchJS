@@ -15,12 +15,12 @@ const utils = {
 	isGuildMemberStillThere: (id, msg) => msg.guild.members.get(id) != undefined,
 
 	isUserBlocked: (userid, blockedList) =>
-		_.isNumber(blockedList[userid]) && blockedList[userid] === 1,
+		blockedList && _.isNumber(blockedList[userid]) && blockedList[userid] === 1,
 
-	hasVouches: (userId, vouchList) => _.isArray(vouchList[userId]) && vouchList[userId].length > 0,
+	hasVouches: (userId, vouchList) => vouchList && _.isArray(vouchList[userId]) && vouchList[userId].length > 0,
 
 	countVouches: (userId, vouchList) =>
-		_.isArray(vouchList[userId]) ? vouchList[userId].length : 0,
+		vouchList && _.isArray(vouchList[userId]) ? vouchList[userId].length : 0,
 
 	isValidMessageHandler: (msg, workGuild, CONFIG) =>
 		msg.guild != null &&

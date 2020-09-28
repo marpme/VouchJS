@@ -10,6 +10,11 @@ export default (msg, vouches, client, CONFIG) => {
 		.setFooter('© VouchJS (' + CONFIG.version + ')')
 		.setTimestamp()
 
+	if (!vouches) {
+		msg.channel.send("There aren't any vouches registered for this server. Sorry ☹️")
+		return
+	}
+
 	const userVouchesMap = Object.keys(vouches)
 		.filter(key => utils.isGuildMemberStillThere(key, msg))
 		.map(key => ({
@@ -24,11 +29,11 @@ export default (msg, vouches, client, CONFIG) => {
 		embed.addField(
 			index + 1 + `. ${utils.findGuildMember(vouch.key, msg)}`,
 			'with **' +
-				vouch.count +
-				' vouches** | Last Trade with ' +
-				`<@${vouch.lastInsert.user}>` +
-				' at ' +
-				moment.unix(vouch.lastInsert.time).format('DD-MM-YYYY h:mm:ss a')
+			vouch.count +
+			' vouches** | Last Trade with ' +
+			`<@${vouch.lastInsert.user}>` +
+			' at ' +
+			moment.unix(vouch.lastInsert.time).format('DD-MM-YYYY h:mm:ss a')
 		)
 	})
 

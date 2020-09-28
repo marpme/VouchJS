@@ -7,7 +7,7 @@ const CHUNKCOUNT = 5
 
 export default (msg, logger, blocked, vouches, CONFIG) => {
 	const user = msg.mentions.users.array()[0]
-	if (user != undefined && user != null) {
+	if (user != undefined && user != null && vouches && vouches[user.id]) {
 		const userVouches = vouches[user.id]
 		const chunkes = _.chunk(userVouches, CHUNKCOUNT) // [[5],[5]]
 		let currentChunk = 0
@@ -37,6 +37,8 @@ export default (msg, logger, blocked, vouches, CONFIG) => {
 
 		return listMessage
 	}
+
+	msg.channel.send("❓ Either the user is unknown to me or the user hasn't any vouches yet.")
 }
 
 const pageNavigationAwaiting = (listMessage, chunkes, currentChunk, simpleEmbed, authorId) => {
