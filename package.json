@@ -4,7 +4,7 @@
   "description": "",
   "main": "nudes.js",
   "scripts": {
-    "start": "babel-node ./app/vouches.js --presets es2015,stage-2",
+    "start": "babel-node ./src/app/vouches.js --presets es2015,stage-2",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": " rimraf libs && babel src -s -D -d libs --presets es2015,stage-2"
   },
