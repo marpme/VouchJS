@@ -1,17 +1,17 @@
 export default {
-	discordToken: '',
+	discordToken: 'NzY3MzcwNzk3NDQxNzQ0OTY2.X4w7vw.y-ucuDGH1msq1NBuoNfuWk6NjPg',
 	guilds: [
 		{
-			guildId: '760214655120965664',
-			vouchChannel: '760214739489128498',
-			logChannel: '760214824679768105',
-			moderators: ['169887202493333505'],
-			marketplaceRole: '760214956632703036',
+			guildId: '739549145240436796',
+			vouchChannel: '766051186872418314',
+			logChannel: '766051186872418314',
+			moderators: ['753743713892565125'],
+			marketplaceRole: '765947681901248513',
 			marketAccess: 3, // count of minimum vouches >=
 			marketTimeout: 12, // waiting time in hours per message
 		},
 	],
-	botID: '411966694433751041',
+	botID: '767370797441744966',
 	blockFile: './models/blocked.json',
 	vouchFile: './models/vouches.json',
 	commands: {
